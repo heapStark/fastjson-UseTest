@@ -1,6 +1,8 @@
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import heapStark.concurrentTest.callable.Call;
 import heapStark.concurrentTest.callable.SumTask;
+import heapStark.concurrentTest.threadLocal.SafeCounter;
+import heapStark.concurrentTest.utils.MultiThreadTest;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,17 +23,50 @@ public class MainTest {
 
     }
 
+    @Test
+    public void safeCounterTest() throws Exception {
+
+        SafeCounter counter = new SafeCounter();
+        //启动五个线程开始计数
+        CountDownLatch countDownLatch = new CountDownLatch(5);
+        CyclicBarrier cyclicBarrier = new CyclicBarrier(6,
+                ()->{
+                    try {
+                        TimeUnit.SECONDS.sleep(5);
+                    } catch (InterruptedException e) {
+
+                    }
+                    System.out.println(Thread.currentThread().getName() + ": " + "action");});
+        MultiThreadTest.multiThreadRun(() -> {
+            for (int i = 0; i < 1; i++) {
+                System.out.println(Thread.currentThread().getName() + ": " + "before");
+                try {
+                    cyclicBarrier.await();
+                } catch (Exception e) {
+
+                }
+                System.out.println(Thread.currentThread().getName() + ": " + "after");
+                try {
+                    TimeUnit.SECONDS.sleep(10);
+                } catch (InterruptedException e) {
+
+                }
+            }
+        }, 5);
+        cyclicBarrier.await();
+    }
+
+
     /**
      * fork join Test
-     *
      */
     @Test
     public void forkJoinTest() {
         ForkJoinPool pool = new ForkJoinPool();
-        SumTask sumTask = new SumTask(1,10);
+        SumTask sumTask = new SumTask(1, 10);
         Future<Integer> future = pool.submit(sumTask);
         try {
-            logger.info(":{}",future.get());
+            logger.info(":{}", future.get());
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
